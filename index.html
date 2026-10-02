@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Row counter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --ink:#141414; --surface:#FFFFFF; --pink:#FF3EA5; --block-ink:#141414;
+  --muted:#3A3A3A; --line:#141414; --tab:#141414; --tab-ink:#FFFFFF; --dots:rgba(20,20,20,.09);
+  --display:"Archivo", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --pixel:"Silkscreen", "Courier New", monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141414; --ink:#F4F4F4; --surface:#1E1E1E; --muted:#BDBDBD; --line:#FF3EA5;
+    --tab:#FFFFFF; --tab-ink:#141414; --dots:rgba(255,62,165,.10);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141414; --ink:#F4F4F4; --surface:#1E1E1E; --muted:#BDBDBD; --line:#FF3EA5;
+  --tab:#FFFFFF; --tab-ink:#141414; --dots:rgba(255,62,165,.10);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background-color:var(--bg);background-image:radial-gradient(var(--dots) 1.1px, transparent 1.3px);background-size:7px 7px;
+  color:var(--ink);font-family:var(--display);font-size:16px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 20px 56px;overflow-x:hidden}
+
+/* title */
+.top{display:flex;align-items:flex-end;gap:16px;margin-bottom:18px;position:relative}
+.title{margin:0;font-weight:900;font-stretch:112%;text-transform:uppercase;font-size:clamp(2.6rem,8vw,5.2rem);line-height:.85;letter-spacing:-.035em}
+.title em{color:var(--pink);font-style:italic;font-weight:900}
+.pxstar{width:clamp(48px,8vw,78px);height:auto;flex:none;margin-bottom:4px}
+.spark{position:absolute;fill:var(--pink)}
+
+/* project bar */
+.projbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:26px}
+.field{background:var(--surface);border:2px solid var(--line);border-radius:0;padding:7px 10px;font-weight:700}
+.tag{font-family:var(--pixel);font-size:.72rem;background:var(--pink);color:#141414;padding:2px 6px;line-height:1.3}
+.projtotal{display:flex;align-items:center;gap:8px;font-weight:700}
+.projtotal b{font-weight:900;font-size:1.6rem;font-style:italic}
+.btn{background:var(--surface);border:2px solid var(--line);border-radius:0;padding:7px 12px;font-weight:700}
+.btn:hover{background:var(--pink);color:#141414}
+.btn.armed{background:#141414;color:var(--pink);border-color:#141414}
+
+/* tabs */
+.tabs{display:flex;gap:0;overflow-x:auto;border-bottom:4px solid var(--tab)}
+.tab{border:2px solid var(--line);border-bottom:none;background:var(--surface);padding:9px 14px 8px;white-space:nowrap;font-weight:800;margin-right:-2px;text-transform:uppercase;letter-spacing:-.01em}
+.tab span{font-family:var(--pixel);font-size:.75rem;margin-left:8px;background:var(--pink);color:#141414;padding:1px 5px}
+.tab[aria-selected="true"]{background:var(--tab);color:var(--tab-ink);border-color:var(--tab)}
+.tab.add{background:transparent;border-style:dashed}
+
+/* main */
+.main{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:30px;margin-top:30px}
+@media (max-width:780px){.main{grid-template-columns:1fr}}
+
+.block{position:relative;background:var(--pink);color:var(--block-ink);padding:46px 24px 34px;
+  clip-path:polygon(0 18px,34% 18px,34% 0,72% 0,72% 30px,100% 30px,100% calc(100% - 24px),82% calc(100% - 24px),82% 100%,0 100%)}
+.blockgrid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:start}
+.swatch{width:78px;height:330px;background:#141414;overflow-y:auto;display:flex;flex-direction:column-reverse;padding:5px;border:2px solid #141414}
+.swatch div{flex:0 0 7px;margin-top:2px}
+.swatch .empty{flex:1;display:grid;place-items:center;color:var(--pink);font-family:var(--pixel);font-size:.65rem;text-align:center;background:none}
+.panelname{font-weight:900;text-transform:uppercase;font-size:1.25rem;border:2px solid transparent;background:none;padding:2px 6px;margin-left:-8px;width:100%;color:#141414;letter-spacing:-.01em}
+.panelname:hover,.panelname:focus{border-color:#141414;background:rgba(255,255,255,.35)}
+.total{font-weight:900;font-stretch:125%;font-size:clamp(5.5rem,15vw,9.5rem);line-height:.82;letter-spacing:-.06em;font-variant-numeric:tabular-nums;margin-top:6px}
+.total.bump{animation:bump .16s steps(3)}
+@keyframes bump{from{transform:translate(0,-8px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.total.bump{animation:none}}
+.totallabel{font-style:italic;font-weight:800;font-size:1.3rem;margin:4px 0 20px;letter-spacing:-.02em}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.addrow{flex:1 1 170px;border:3px solid #141414;padding:14px 16px;font-weight:900;font-size:1.1rem;text-transform:uppercase;box-shadow:5px 5px 0 #141414;letter-spacing:-.01em}
+.addrow:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #141414}
+.undo{border:3px solid #141414;background:transparent;padding:12px 16px;font-weight:800;color:#141414}
+.undo:hover:not(:disabled){background:#141414;color:var(--pink)}
+.keys{margin:16px 0 0;line-height:1.9;font-weight:600;font-size:.92rem;color:#141414}
+kbd{font-family:var(--pixel);font-size:.7rem;background:#141414;color:var(--pink);padding:2px 5px;white-space:nowrap}
+.panelops{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+/* colours */
+.colhead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.colhead h2{margin:0;font-weight:900;font-style:italic;text-transform:uppercase;font-size:2rem;line-height:.9;letter-spacing:-.03em}
+.colors{display:flex;flex-direction:column;gap:14px}
+.color{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:2px solid var(--line);padding:10px 14px}
+.color[aria-pressed="true"]{border-color:var(--pink);outline:2px solid var(--pink);outline-offset:-5px}
+.color .h{position:absolute;width:10px;height:10px;background:var(--surface);border:2px solid var(--pink)}
+.h.tl{top:-6px;left:-6px}.h.tr{top:-6px;right:-6px}.h.bl{bottom:-6px;left:-6px}.h.br{bottom:-6px;right:-6px}
+.color .lbl{position:absolute;top:-11px;left:16px}
+.dot{width:36px;height:36px;border:2px solid #141414;display:grid;place-items:center;font-family:var(--pixel);font-size:.75rem}
+.cname{font-weight:800;font-size:1.05rem}
+.cname small{display:block;font-weight:500;color:var(--muted);font-size:.85rem}
+.ccount{font-weight:900;font-stretch:125%;font-size:2rem;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.editrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--surface);border:2px solid var(--line);padding:8px 10px}
+.editrow input[type=text],.addcolor input[type=text]{border:2px solid var(--line);border-radius:0;padding:7px 10px;background:var(--surface);min-width:0;font-weight:600}
+input[type=color]{width:42px;height:38px;border:2px solid var(--line);background:none;padding:0;cursor:pointer;border-radius:0}
+.addcolor{display:grid;grid-template-columns:auto 1fr auto;gap:8px;margin-top:18px}
+.primary{background:#141414;color:var(--pink);border:2px solid #141414;padding:7px 14px;font-weight:800;text-transform:uppercase}
+.primary:hover{background:var(--pink);color:#141414}
+.hint{color:var(--muted);font-size:.9rem;font-weight:600}
+.sync{margin-top:34px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const KEY = 'knit-row-counter-v1';
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function makePanel(name, colors){
+  const cols = colors ? colors.map(c => ({...c})) : [{id: uid(), name: 'Main colour', hex: '#D4FF1E'}];
+  return {id: uid(), name, colors: cols, rows: [], selected: cols[0] ? cols[0].id : null};
+}
+function makeProject(name){
+  const pn = makePanel('Panel 1');
+  return {id: uid(), name, panels: [pn], activePanel: pn.id};
+}
+function blank(){ const p = makeProject('My project'); return {projects: [p], activeProject: p.id}; }
+
+let state = blank();
+let editColors = false;
+let armed = null, armTimer = null;
+
+const proj = () => state.projects.find(p => p.id === state.activeProject) || state.projects[0];
+const panel = () => { const p = proj(); return p.panels.find(x => x.id === p.activePanel) || p.panels[0]; };
+const countsOf = pn => { const m = {}; pn.rows.forEach(c => m[c] = (m[c] || 0) + 1); return m; };
+const hexOf = (pn, id) => (pn.colors.find(c => c.id === id) || {hex: '#999'}).hex;
+
+function textOn(hex){
+  const h = hex.replace('#',''); const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return (0.299*r + 0.587*g + 0.114*b) > 160 ? '#241F33' : '#FFFFFF';
+}
+
+/* ---------- no saving: everything lives in this tab ---------- */
+function commit(bump){ render(bump); }
+window.addEventListener('beforeunload', e => {
+  if (state.projects.some(p => p.panels.some(x => x.rows.length))){ e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ---------- actions ---------- */
+function addRow(){
+  const pn = panel();
+  if (!pn.selected || !pn.colors.some(c => c.id === pn.selected)) return;
+  pn.rows.push(pn.selected); commit(true);
+}
+function undo(){ const pn = panel(); if (pn.rows.length){ pn.rows.pop(); commit(); } }
+function selectColor(id){ panel().selected = id; commit(); }
+
+function arm(key){
+  if (armed === key){ armed = null; clearTimeout(armTimer); return true; }
+  armed = key; clearTimeout(armTimer);
+  armTimer = setTimeout(() => { armed = null; render(); }, 3000);
+  render(); return false;
+}
+
+const acts = {
+  addRow, undo,
+  select: el => selectColor(el.dataset.id),
+  tab: el => { proj().activePanel = el.dataset.id; editColors = false; commit(); },
+  addPanel: () => { const p = proj(); const pn = makePanel('Panel ' + (p.panels.length + 1), panel().colors); p.panels.push(pn); p.activePanel = pn.id; commit(); },
+  delPanel: () => {
+    const p = proj(); if (p.panels.length < 2) return;
+    if (!arm('delPanel')) return;
+    p.panels = p.panels.filter(x => x.id !== p.activePanel); p.activePanel = p.panels[0].id; commit();
+  },
+  resetPanel: () => { if (!arm('resetPanel')) return; panel().rows = []; commit(); },
+  toggleEdit: () => { editColors = !editColors; render(); },
+  delColor: el => {
+    const id = el.dataset.id; if (!arm('delColor:' + id)) return;
+    const pn = panel(); pn.colors = pn.colors.filter(c => c.id !== id); pn.rows = pn.rows.filter(r => r !== id);
+    if (pn.selected === id) pn.selected = pn.colors[0] ? pn.colors[0].id : null; commit();
+  },
+  addColor: () => {
+    const name = document.getElementById('newName').value.trim();
+    const hex = document.getElementById('newHex').value;
+    const pn = panel(); const c = {id: uid(), name: name || 'Colour ' + (pn.colors.length + 1), hex};
+    pn.colors.push(c); if (!pn.selected) pn.selected = c.id; commit();
+    setTimeout(() => { const i = document.getElementById('newName'); if (i) i.focus(); }, 0);
+  }
+};
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const fn = acts[el.dataset.act]; if (fn) fn(el);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'panelName'){ panel().name = t.value.trim() || panel().name; commit(); }
+  else if (t.dataset.cname){ const c = panel().colors.find(x => x.id === t.dataset.cname); if (c){ c.name = t.value.trim() || c.name; commit(); } }
+  else if (t.dataset.chex){ const c = panel().colors.find(x => x.id === t.dataset.chex); if (c){ c.hex = t.value; commit(); } }
+});
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (t.matches('input, textarea, select, [contenteditable]')){
+    if (t.id === 'newName' && e.key === 'Enter'){ e.preventDefault(); acts.addColor(); }
+    else if (e.key === 'Enter' && t.type === 'text'){ t.blur(); }
+    return;
+  }
+  if (e.key === 'Backspace' || e.key === ' '){ e.preventDefault(); addRow(); }
+  else if (e.key === '-' || (e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey))){ e.preventDefault(); undo(); }
+  else if (/^[1-9]$/.test(e.key)){ const c = panel().colors[+e.key - 1]; if (c) selectColor(c.id); }
+});
+
+/* ---------- render ---------- */
+const STAR = ['....#....','....#....','...###...','#########','.#######.','..#####..','..##.##..','.##...##.','.#.....#.'];
+function pixelStar(fill){
+  let r = '';
+  STAR.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') r += `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`; }));
+  return `<svg class="pxstar" viewBox="0 0 9 9" fill="${fill}" aria-hidden="true" shape-rendering="crispEdges">${r}</svg>`;
+}
+const sparkle = (style, size) => `<svg class="spark" style="${style}" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 L13.6 10.4 L24 12 L13.6 13.6 L12 24 L10.4 13.6 L0 12 L10.4 10.4Z"/></svg>`;
+
+function render(bump){
+  const p = proj(), pn = panel(), counts = countsOf(pn);
+  const projTotal = p.panels.reduce((s, x) => s + x.rows.length, 0);
+  const sel = pn.colors.find(c => c.id === pn.selected);
+  const armBtn = (key, label, armedLabel) => armed === key ? armedLabel : label;
+
+  document.getElementById('app').innerHTML = `
+    <header class="top">
+      <h1 class="title">Row <em>counter</em></h1>
+      ${pixelStar('var(--pink)')}
+      ${sparkle('right:4%;top:-4px', 30)}
+      ${sparkle('right:14%;top:34px', 16)}
+    </header>
+
+    <div class="projbar">
+      <div class="projtotal"><span class="tag">Whole project</span><b>${projTotal}</b> rows</div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Panels">
+      ${p.panels.map(x => `<button class="tab" role="tab" aria-selected="${x.id === pn.id}" data-act="tab" data-id="${x.id}">${esc(x.name)}<span>${x.rows.length}</span></button>`).join('')}
+      <button class="tab add" data-act="addPanel">+ Panel</button>
+    </div>
+
+    <div class="main">
+      <section>
+        <div class="block">
+          <div class="blockgrid">
+            <div class="swatch" aria-label="Rows knitted so far, newest at the top">
+              ${pn.rows.length ? pn.rows.map(r => `<div style="background:${hexOf(pn, r)}"></div>`).join('') : '<div class="empty">No rows yet</div>'}
+            </div>
+            <div>
+              <input id="panelName" class="panelname" type="text" value="${esc(pn.name)}" aria-label="Rename panel">
+              <div class="total ${bump ? 'bump' : ''}" aria-live="polite">${pn.rows.length}</div>
+              <div class="totallabel">rows on this panel</div>
+              <div class="actions">
+                <button class="addrow" data-act="addRow" ${sel ? '' : 'disabled'} style="background:${sel ? sel.hex : '#ffffff'};color:${sel ? textOn(sel.hex) : '#141414'}">
+                  +1 row${sel ? ' · ' + esc(sel.name) : ''}
+                </button>
+                <button class="undo" data-act="undo" ${pn.rows.length ? '' : 'disabled'}>Undo</button>
+              </div>
+              <p class="keys"><kbd>Backspace</kbd> or <kbd>Space</kbd> adds a row.<br><kbd>1</kbd>–<kbd>9</kbd> picks a colour.<br><kbd>-</kbd> undoes.</p>
+            </div>
+          </div>
+        </div>
+        <div class="panelops">
+          <button class="btn ${armed === 'resetPanel' ? 'armed' : ''}" data-act="resetPanel" ${pn.rows.length ? '' : 'disabled'}>${armBtn('resetPanel', 'Clear this panel', 'Tap again to clear')}</button>
+          ${p.panels.length > 1 ? `<button class="btn ${armed === 'delPanel' ? 'armed' : ''}" data-act="delPanel">${armBtn('delPanel', 'Delete panel', 'Tap again to delete')}</button>` : ''}
+        </div>
+      </section>
+
+      <section>
+        <div class="colhead">
+          <h2>Colours</h2>
+          <button class="btn" data-act="toggleEdit">${editColors ? 'Done' : 'Edit colours'}</button>
+        </div>
+        <div class="colors">
+          ${pn.colors.length ? pn.colors.map((c, i) => editColors ? `
+            <div class="editrow">
+              <input type="color" value="${c.hex}" data-chex="${c.id}" aria-label="Colour for ${esc(c.name)}">
+              <input type="text" value="${esc(c.name)}" data-cname="${c.id}" aria-label="Name">
+              <button class="btn ${armed === 'delColor:' + c.id ? 'armed' : ''}" data-act="delColor" data-id="${c.id}">${armed === 'delColor:' + c.id ? (counts[c.id] ? 'Also deletes ' + counts[c.id] + ' rows' : 'Tap again') : 'Remove'}</button>
+            </div>` : `
+            <button class="color" aria-pressed="${c.id === pn.selected}" data-act="select" data-id="${c.id}">
+              ${c.id === pn.selected ? '<i class="h tl"></i><i class="h tr"></i><i class="h bl"></i><i class="h br"></i><span class="tag lbl">Counting</span>' : ''}
+              <span class="dot" style="background:${c.hex};color:${textOn(c.hex)}">${i < 9 ? i + 1 : ''}</span>
+              <span class="cname">${esc(c.name)}<small>${c.id === pn.selected ? 'Selected' : 'Tap to count this colour'}</small></span>
+              <span class="ccount">${counts[c.id] || 0}</span>
+            </button>`).join('') : '<p class="hint">Add your first colour below to start counting.</p>'}
+        </div>
+        <div class="addcolor">
+          <input id="newHex" type="color" value="#F8C8DC" aria-label="New colour">
+          <input id="newName" type="text" placeholder="Colour name, e.g. Baby pink" aria-label="New colour name">
+          <button class="primary" data-act="addColor">Add</button>
+        </div>
+        <p class="hint">New panels start with this panel's colours.</p>
+      </section>
+    </div>
+    <span class="sync tag">Counts reset when you close or reload the page</span>
+  `;
+}
+render();
+</script>
+</body>
+</html>
